@@ -1,0 +1,97 @@
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Segoe UI, Tahoma, Geneva, Verdana, sans-serif;
+  background: radial-gradient(circle at top left, #15395d 0%, #091725 65%);
+  color: #e7f5ff;
+}
+.app {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 14px;
+  padding: 14px;
+}
+.panel {
+  background: rgba(11, 22, 37, 0.92);
+  border: 1px solid #2e597f;
+  border-radius: 12px;
+  padding: 14px;
+}
+h1 {
+  margin: 0 0 8px;
+  font-size: 24px;
+}
+.muted {
+  margin: 0 0 12px;
+  color: #8ab9df;
+  font-size: 13px;
+}
+.row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+input, button {
+  border-radius: 8px;
+  border: 1px solid #3b6d9b;
+  padding: 10px;
+  font-size: 14px;
+}
+input {
+  background: #10253c;
+  color: #e7f5ff;
+  flex: 1;
+}
+button {
+  background: #123355;
+  color: #e7f5ff;
+  cursor: pointer;
+}
+button.primary {
+  background: #00a5d4;
+  color: #072033;
+  font-weight: 700;
+}
+.status {
+  min-height: 22px;
+  margin: 8px 0 12px;
+  color: #b8dfff;
+}
+.hud {
+  display: grid;
+  gap: 10px;
+}
+.hp {
+  margin-top: 4px;
+  background: #25354a;
+  height: 14px;
+  border-radius: 7px;
+  overflow: hidden;
+}
+.hp > div {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #f04f4f, #ffa351);
+  transition: width 0.15s ease;
+}
+.arena-wrap {
+  background: rgba(11, 22, 37, 0.86);
+  border: 1px solid #2e597f;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+}
+#arena {
+  width: min(95vw, 900px);
+  max-width: 100%;
+  height: auto;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #0b4f88 0%, #0b2a4b 100%);
+  border: 1px solid #5c91bf;
+}
+@media (max-width: 900px) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Slenderina - Spawn Fixed</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { margin: 0; background: #000; color: #800; font-family: 'Courier New', monospace; overflow: hidden; width: 100vw; height: 100vh; }
+        #container { position: relative; border: 0; width: 100vw; height: 100vh; background: #000; overflow: hidden; }
+        #container::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, transparent 20%, rgba(0,0,0,1) 90%); pointer-events: none; }
+        canvas { width: 100%; height: 100%; image-rendering: pixelated; }
+        #ui { position: absolute; top: 20px; left: 20px; pointer-events: none; text-shadow: 2px 2px #000; font-size: 20px; z-index: 10; color: #f00; }
+        #prompt { position: absolute; bottom: 80px; width: 100%; text-align: center; color: white; font-size: 18px; pointer-events: none; z-index: 20; }
+        #quiz-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a0000; border: 3px solid #800; padding: 25px; color: #ddd; display: none; z-index: 100; width: 300px; text-align: center; }
+        .ans-btn { display: block; width: 100%; margin: 10px 0; padding: 10px; background: #300; color: #fff; border: 1px solid #800; cursor: pointer; }
+        #flash { position: absolute; top:0; left:0; width:100%; height:100%; background: red; opacity: 0; pointer-events: none; z-index: 50; transition: opacity 0.2s; }
+    </style>
+</head>
+<body>
+
+<div id="container">
+    <button id="pause-btn" aria-label="Pause Menu">&#9776;</button>
+    <div id="pause-menu" class="hidden">
+        <div id="pause-panel">
+            <h3 id="pause-title">GAME PAUSED</h3>
+            <button id="resume-btn" class="menu-btn">Resume Game</button>
+            <button id="restart-btn" class="menu-btn">Restart Game</button>
+            <button id="settings-btn" class="menu-btn">Settings</button>
+            <div id="settings-panel" class="hidden">
+                <label for="sens-slider">Mouse Sensitivity</label>
+                <input id="sens-slider" type="range" min="1" max="10" value="3">
+                <label for="enemy-slider">Enemy Speed</label>
+                <input id="enemy-slider" type="range" min="6" max="20" value="12">
+            </div>
+        </div>
+    </div>
+    <div id="flash"></div>
+    <canvas id="gameCanvas" width="400" height="300"></canvas>
+    <div id="ui">
+        <div id="lives">❤️❤️❤️</div>
+        <div id="progress">BOOKS: 0 / 8</div>
+        <div id="timer">TIME: 00:00.0</div>
+    </div>
+    <div id="prompt"></div>
+    <div id="quiz-box">
+        <h3 style="color:#f00;">ANCIENT BOOK</h3>
+        <p id="question-text"></p>
+        <div id="answers"></div>
+    </div>
+</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const container = document.getElementById('container');
+const ctx = canvas.getContext('2d', { alpha: false });
+const RENDER_SCALE = 0.75;
+const wallImg = new Image(); wallImg.src = 'wall.jpg';
+const ceilingImg = new Image(); ceilingImg.src = 'ceiling.jpg';
+const doorImg = new Image(); doorImg.src = 'door.jpg';
+const bookImg = new Image(); bookImg.src = 'book.png';
+const ghostImg = new Image(); ghostImg.src = 'ghost.png';
+const escapeDoorImg = new Image(); escapeDoorImg.src = 'escape door.jpg';
+const floorImg = new Image(); floorImg.src = 'floor.jpg';
+
+let floorTex = null;
+let ceilingTex = null;
+let floorBuffer = null;
+let zBuffer = null;
+
+function resizeCanvas() {
+    canvas.width = Math.max(320, Math.floor(container.clientWidth * RENDER_SCALE));
+    canvas.height = Math.max(240, Math.floor(container.clientHeight * RENDER_SCALE));
+    floorBuffer = null;
+    zBuffer = new Float32Array(canvas.width);
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+function buildTextureData(img) {
+    if (!img.complete || img.naturalWidth <= 0 || img.naturalHeight <= 0) return null;
+    const tCanvas = document.createElement('canvas');
+    tCanvas.width = img.naturalWidth;
+    tCanvas.height = img.naturalHeight;
+    const tCtx = tCanvas.getContext('2d', { willReadFrequently: true });
+    tCtx.drawImage(img, 0, 0);
+    const data = tCtx.getImageData(0, 0, tCanvas.width, tCanvas.height).data;
+    return { data, width: tCanvas.width, height: tCanvas.height };
+}
+
+function refreshWorldTextures() {
+    floorTex = buildTextureData(floorImg);
+    ceilingTex = buildTextureData(ceilingImg);
+}
+
+floorImg.addEventListener('load', refreshWorldTextures);
+ceilingImg.addEventListener('load', refreshWorldTextures);
+refreshWorldTextures();
+
+function renderFloorAndCeiling(w, h) {
+    if (!floorBuffer || floorBuffer.width !== w || floorBuffer.height !== h) {
+        floorBuffer = ctx.createImageData(w, h);
+    }
+    const out = floorBuffer.data;
+    const centerY = (h / 2) + pitch;
+    const rayDirX0 = dirX - planeX;
+    const rayDirY0 = dirY - planeY;
+    const rayDirX1 = dirX + planeX;
+    const rayDirY1 = dirY + planeY;
+    const halfH = h * 0.5;
+
+    for (let y = 0; y < h; y++) {
+        const p = y - centerY;
+        if (Math.abs(p) < 0.0001) continue;
+
+        const rowDist = halfH / Math.abs(p);
+        const stepX = rowDist * (rayDirX1 - rayDirX0) / w;
+        const stepY = rowDist * (rayDirY1 - rayDirY0) / w;
+        let worldX = posX + rowDist * rayDirX0;
+        let worldY = posY + rowDist * rayDirY0;
+
+        const isFloor = p > 0;
+        const tex = isFloor ? floorTex : ceilingTex;
+        const shade = Math.max(0.2, 1 - rowDist * 0.055);
+
+        for (let x = 0; x < w; x++) {
+            const idx = (y * w + x) * 4;
+            if (tex) {
+                const fx = worldX - Math.floor(worldX);
+                const fy = worldY - Math.floor(worldY);
+                const tx = Math.floor(fx * tex.width) % tex.width;
+                const ty = Math.floor(fy * tex.height) % tex.height;
+                const tidx = (ty * tex.width + tx) * 4;
+                out[idx] = tex.data[tidx] * shade;
+                out[idx + 1] = tex.data[tidx + 1] * shade;
+                out[idx + 2] = tex.data[tidx + 2] * shade;
+                out[idx + 3] = 255;
+            } else {
+                const base = isFloor ? 28 : 14;
+                out[idx] = base;
+                out[idx + 1] = base;
+                out[idx + 2] = base;
+                out[idx + 3] = 255;
+            }
+            worldX += stepX;
+            worldY += stepY;
+        }
+    }
+    ctx.putImageData(floorBuffer, 0, 0);
+}
+
+// Legend: 1=Wall, 0=Floor, 3=Book, 4=Door, 7=Escape Route, 8=Player Spawn, 9=AI Spawn
+let worldMap = [
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [7,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0,1],
+    [1,0,1,1,4,1,0,0,0,1,0,4,0,0,1,0,1,0,1,0,1,0,1,0,1],
+    [1,0,1,0,0,1,0,1,0,1,0,1,0,0,1,0,0,0,0,0,0,0,0,0,1],
+    [1,0,1,9,0,1,0,1,0,0,0,1,1,1,1,0,0,0,0,0,1,1,0,1,1],
+    [1,0,1,1,1,1,0,1,0,1,0,0,0,0,0,0,1,0,1,0,1,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,1,0,0,1,1,1,4,1,0,0,0,0,0,1],
+    [1,0,1,1,0,1,1,1,1,1,1,1,0,0,1,3,0,0,1,0,1,1,0,1,1],
+    [1,0,0,0,0,0,0,0,0,0,0,1,0,0,1,1,1,1,1,0,0,0,0,0,1],
+    [1,4,1,1,0,1,0,1,0,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,1,0,1,0,1,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,1],
+    [1,0,3,1,0,0,0,0,0,0,0,1,0,0,1,0,0,0,1,0,0,0,0,0,1], 
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1], 
+];
+let posX = 2, posY = 2; // Defaults
+let enemy = { x: 5, y: 5 };
+const books = [];
+const BOOK_TARGET = 8;
+const QUESTION_POOL_SIZE = 20;
+const MIN_BOOK_DISTANCE_FROM_PLAYER = 5.5;
+const MIN_BOOK_DISTANCE_BETWEEN_BOOKS = 3.5;
+
+// Scan map for spawns, books, and doors
+for(let r=0; r<worldMap.length; r++) {
+    for(let c=0; c<worldMap[r].length; c++) {
+        if(worldMap[r][c] === 8) { posX = r + 0.5; posY = c + 0.5; worldMap[r][c] = 0; }
+        if(worldMap[r][c] === 9) { enemy.x = r + 0.5; enemy.y = c + 0.5; worldMap[r][c] = 0; }
+        if(worldMap[r][c] === 3) { worldMap[r][c] = 0; }
+    }
+}
+
+function getRandomBookSpawn(excludedBook = null, minFromPlayer = 0, minFromBooks = 0) {
+    const candidates = [];
+    for (let r = 0; r < worldMap.length; r++) {
+        for (let c = 0; c < worldMap[r].length; c++) {
+            if (worldMap[r][c] !== 0) continue;
+            const x = r + 0.5;
+            const y = c + 0.5;
+            if (excludedBook && Math.abs(excludedBook.x - x) < 0.01 && Math.abs(excludedBook.y - y) < 0.01) continue;
+            if (Math.hypot(posX - x, posY - y) < minFromPlayer) continue;
+
+            const occupied = books.some(b => !b.collected && b !== excludedBook && Math.hypot(b.x - x, b.y - y) < minFromBooks);
+            if (occupied) continue;
+            candidates.push({ x, y });
+        }
+    }
+    if (candidates.length === 0) return null;
+    return candidates[Math.floor(Math.random() * candidates.length)];
+}
+
+function getSpawnWithFallback(excludedBook, minFromPlayer, minFromBooks) {
+    let playerDist = minFromPlayer;
+    let bookDist = minFromBooks;
+    for (let i = 0; i < 7; i++) {
+        const spawn = getRandomBookSpawn(excludedBook, playerDist, bookDist);
+        if (spawn) return spawn;
+        playerDist = Math.max(0, playerDist - 1);
+        bookDist = Math.max(0, bookDist - 0.7);
+    }
+    return getRandomBookSpawn(excludedBook, 0, 0);
+}
+
+function respawnBook(book) {
+    const spawn = getSpawnWithFallback(book, MIN_BOOK_DISTANCE_FROM_PLAYER, MIN_BOOK_DISTANCE_BETWEEN_BOOKS);
+    if (!spawn) {
+        book.collected = true;
+        return;
+    }
+    book.x = spawn.x;
+    book.y = spawn.y;
+    book.collected = false;
+}
+
+function spawnInitialBooks(count) {
+    for (let i = 0; i < count; i++) {
+        const spawn = getSpawnWithFallback(null, MIN_BOOK_DISTANCE_FROM_PLAYER, MIN_BOOK_DISTANCE_BETWEEN_BOOKS);
+        if (!spawn) break;
+        books.push({ x: spawn.x, y: spawn.y, collected: false });
+    }
+}
+
+spawnInitialBooks(BOOK_TARGET);
+
+let dirX = 1, dirY = 0, planeX = 0, planeY = 0.66, pitch = 0;
+let keys = {}, booksCollected = 0, lives = 3, quizActive = false, damageTimer = 0;
+let gamePaused = false;
+let mouseSensitivity = 0.003;
+let enemySpeed = 0.012;
+let gameWon = false;
+let runStartMs = performance.now();
+let pausedTotalMs = 0;
+let pauseStartedMs = null;
+let finishTimeMs = null;
+const openDoors = new Set();
+let enemyPath = [];
+let repathCooldown = 0;
+
+const pauseMenu = document.getElementById('pause-menu');
+const settingsPanel = document.getElementById('settings-panel');
+const pauseTitle = document.getElementById('pause-title');
+const pauseBtn = document.getElementById('pause-btn');
+const resumeBtn = document.getElementById('resume-btn');
+const restartBtn = document.getElementById('restart-btn');
+const settingsBtn = document.getElementById('settings-btn');
+const sensSlider = document.getElementById('sens-slider');
+const enemySlider = document.getElementById('enemy-slider');
+const timerEl = document.getElementById('timer');
+
+function getElapsedMs(now = performance.now()) {
+    const endMs = gameWon && finishTimeMs !== null ? finishTimeMs : now;
+    const currentPaused = pauseStartedMs !== null ? (endMs - pauseStartedMs) : 0;
+    return Math.max(0, endMs - runStartMs - pausedTotalMs - currentPaused);
+}
+
+function formatTime(ms) {
+    const totalTenths = Math.floor(ms / 100);
+    const minutes = Math.floor(totalTenths / 600);
+    const seconds = Math.floor((totalTenths % 600) / 10);
+    const tenths = totalTenths % 10;
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${tenths}`;
+}
+
+function setPauseState(paused) {
+    if (gameWon) return;
+    gamePaused = paused;
+    keys = {};
+    if (paused) {
+        if (pauseStartedMs === null) pauseStartedMs = performance.now();
+        document.exitPointerLock();
+        pauseMenu.classList.remove('hidden');
+        pauseTitle.innerText = "GAME PAUSED";
+    } else {
+        if (pauseStartedMs !== null) {
+            pausedTotalMs += performance.now() - pauseStartedMs;
+            pauseStartedMs = null;
+        }
+        pauseMenu.classList.add('hidden');
+        settingsPanel.classList.add('hidden');
+        if (!quizActive) canvas.requestPointerLock();
+    }
+}
+
+pauseBtn.addEventListener('click', () => setPauseState(!gamePaused));
+resumeBtn.addEventListener('click', () => setPauseState(false));
+restartBtn.addEventListener('click', () => location.reload());
+settingsBtn.addEventListener('click', () => settingsPanel.classList.toggle('hidden'));
+sensSlider.addEventListener('input', (e) => {
+    mouseSensitivity = Number(e.target.value) * 0.001;
+});
+enemySlider.addEventListener('input', (e) => {
+    enemySpeed = Number(e.target.value) * 0.001;
+});
+
+function doorKey(x, y) {
+    return `${x},${y}`;
+}
+
+function isDoorOpen(x, y) {
+    return openDoors.has(doorKey(x, y));
+}
+
+function toggleDoor(x, y) {
+    const key = doorKey(x, y);
+    if (openDoors.has(key)) openDoors.delete(key);
+    else openDoors.add(key);
+}
+
+function getTile(x, y) {
+    const tx = Math.floor(x), ty = Math.floor(y);
+    if (tx < 0 || tx >= worldMap.length || ty < 0 || ty >= worldMap[0].length) return 1;
+    const tile = worldMap[tx][ty];
+    if (tile === 4 && isDoorOpen(tx, ty)) return 0;
+    return tile;
+}
+
+function getFrontDoorCell() {
+    const tx = Math.floor(posX + dirX * 0.9);
+    const ty = Math.floor(posY + dirY * 0.9);
+    if (tx < 0 || tx >= worldMap.length || ty < 0 || ty >= worldMap[0].length) return null;
+    if (worldMap[tx][ty] !== 4) return null;
+    return { x: tx, y: ty };
+}
+
+function getFrontEscapeCell() {
+    const tx = Math.floor(posX + dirX * 0.9);
+    const ty = Math.floor(posY + dirY * 0.9);
+    if (tx < 0 || tx >= worldMap.length || ty < 0 || ty >= worldMap[0].length) return null;
+    if (worldMap[tx][ty] !== 7) return null;
+    return { x: tx, y: ty };
+}
+
+function canMoveTo(x, y, radius = 0.2) {
+    return (
+        getTile(x - radius, y - radius) === 0 &&
+        getTile(x + radius, y - radius) === 0 &&
+        getTile(x - radius, y + radius) === 0 &&
+        getTile(x + radius, y + radius) === 0
+    );
+}
+
+function findPath(startX, startY, goalX, goalY) {
+    const rows = worldMap.length;
+    const cols = worldMap[0].length;
+    if (startX < 0 || startX >= rows || startY < 0 || startY >= cols) return [];
+    if (goalX < 0 || goalX >= rows || goalY < 0 || goalY >= cols) return [];
+
+    const visited = Array.from({ length: rows }, () => Array(cols).fill(false));
+    const parent = Array.from({ length: rows }, () => Array(cols).fill(null));
+    const queue = [{ x: startX, y: startY }];
+    const dirs = [
+        { x: 1, y: 0 }, { x: -1, y: 0 },
+        { x: 0, y: 1 }, { x: 0, y: -1 }
+    ];
+
+    visited[startX][startY] = true;
+    let found = false;
+
+    while (queue.length > 0) {
+        const cur = queue.shift();
+        if (cur.x === goalX && cur.y === goalY) {
+            found = true;
+            break;
+        }
+        for (const d of dirs) {
+            const nx = cur.x + d.x;
+            const ny = cur.y + d.y;
+            if (nx < 0 || nx >= rows || ny < 0 || ny >= cols) continue;
+            if (visited[nx][ny]) continue;
+            if (getTile(nx, ny) !== 0) continue;
+            visited[nx][ny] = true;
+            parent[nx][ny] = cur;
+            queue.push({ x: nx, y: ny });
+        }
+    }
+
+    if (!found) return [];
+
+    const path = [];
+    let cur = { x: goalX, y: goalY };
+    while (!(cur.x === startX && cur.y === startY)) {
+        path.push({ x: cur.x + 0.5, y: cur.y + 0.5 });
+        cur = parent[cur.x][cur.y];
+        if (!cur) return [];
+    }
+    path.reverse();
+    return path;
+}
+
+function takeDamage() {
+    if (damageTimer > 0) return;
+    lives--;
+    damageTimer = 120; // Invincible for 2 seconds
+    document.getElementById('flash').style.opacity = "0.7";
+    setTimeout(() => document.getElementById('flash').style.opacity = "0", 200);
+    if(lives <= 0) { alert("YOU WERE CAUGHT."); location.reload(); }
+}
+
+function update() {
+    timerEl.innerText = `TIME: ${formatTime(getElapsedMs())}`;
+    if (gameWon || quizActive || lives <= 0 || gamePaused) return;
+    const frameScale = Math.max(0.4, Math.min(2.2, frameDeltaMs / 16.6667));
+    if (damageTimer > 0) damageTimer -= frameScale;
+
+    let moveSpeed = 0.05 * frameScale, buffer = 0.3;
+    // Movement logic
+    if (keys['w']) {
+        if(getTile(posX + dirX * buffer, posY) === 0) posX += dirX * moveSpeed;
+        if(getTile(posX, posY + dirY * buffer) === 0) posY += dirY * moveSpeed;
+    }
+    if (keys['s']) {
+        if(getTile(posX - dirX * buffer, posY) === 0) posX -= dirX * moveSpeed;
+        if(getTile(posX, posY - dirY * buffer) === 0) posY -= dirY * moveSpeed;
+    }
+    if (keys['a']) {
+        const strafeX = dirY;
+        const strafeY = -dirX;
+        if(getTile(posX + strafeX * buffer, posY) === 0) posX += strafeX * moveSpeed;
+        if(getTile(posX, posY + strafeY * buffer) === 0) posY += strafeY * moveSpeed;
+    }
+    if (keys['d']) {
+        const strafeX = -dirY;
+        const strafeY = dirX;
+        if(getTile(posX + strafeX * buffer, posY) === 0) posX += strafeX * moveSpeed;
+        if(getTile(posX, posY + strafeY * buffer) === 0) posY += strafeY * moveSpeed;
+    }
+
+    // Enemy pathfinding chase
+    let edx = posX - enemy.x, edy = posY - enemy.y;
+    let dist = Math.sqrt(edx * edx + edy * edy);
+    if (dist < 0.5) takeDamage();
+
+    if (repathCooldown > 0) repathCooldown -= frameScale;
+    const enemyCellX = Math.floor(enemy.x), enemyCellY = Math.floor(enemy.y);
+    const playerCellX = Math.floor(posX), playerCellY = Math.floor(posY);
+    const needsRepath = (
+        repathCooldown <= 0 ||
+        enemyPath.length === 0 ||
+        Math.abs(enemyPath[enemyPath.length - 1].x - (playerCellX + 0.5)) > 0.01 ||
+        Math.abs(enemyPath[enemyPath.length - 1].y - (playerCellY + 0.5)) > 0.01
+    );
+
+    if (needsRepath) {
+        enemyPath = findPath(enemyCellX, enemyCellY, playerCellX, playerCellY);
+        repathCooldown = 14;
+    }
+
+    if (enemyPath.length > 0) {
+        const target = enemyPath[0];
+        const vx = target.x - enemy.x;
+        const vy = target.y - enemy.y;
+        const stepDist = Math.sqrt(vx * vx + vy * vy);
+
+        if (stepDist < 0.12) {
+            enemyPath.shift();
+        } else if (stepDist > 0.0001) {
+            const moveX = (vx / stepDist) * enemySpeed * frameScale;
+            const moveY = (vy / stepDist) * enemySpeed * frameScale;
+            const nextX = enemy.x + moveX;
+            const nextY = enemy.y + moveY;
+            if (canMoveTo(nextX, enemy.y, 0.18)) enemy.x = nextX;
+            if (canMoveTo(enemy.x, nextY, 0.18)) enemy.y = nextY;
+        }
+    }
+
+    // Interaction Prompt
+    let nearBook = books.find(b => !b.collected && Math.sqrt((posX-b.x)**2 + (posY-b.y)**2) < 0.7);
+    let frontDoor = getFrontDoorCell();
+    let frontEscape = getFrontEscapeCell();
+    if(nearBook) {
+        document.getElementById('prompt').innerText = "Press 'E' to take Book";
+        if(keys['e']) { keys['e'] = false; startQuiz(nearBook); }
+    } else if (frontEscape) {
+        const canEscape = booksCollected >= BOOK_TARGET;
+        document.getElementById('prompt').innerText = canEscape
+            ? "Press 'E' to Escape"
+            : `Escape Locked: Collect ${BOOK_TARGET - booksCollected} more book(s)`;
+        if (canEscape && keys['e']) {
+            keys['e'] = false;
+            gameWon = true;
+            finishTimeMs = performance.now();
+            pauseTitle.innerText = "YOU ESCAPED";
+            pauseMenu.classList.remove('hidden');
+            settingsPanel.classList.add('hidden');
+            document.exitPointerLock();
+            const finalTime = formatTime(getElapsedMs(finishTimeMs));
+            document.getElementById('prompt').innerText = `YOU ESCAPED IN ${finalTime}`;
+        }
+    } else if (frontDoor) {
+        const action = isDoorOpen(frontDoor.x, frontDoor.y) ? "Close" : "Open";
+        document.getElementById('prompt').innerText = `Press 'E' to ${action} Door`;
+        if (keys['e']) {
+            keys['e'] = false;
+            toggleDoor(frontDoor.x, frontDoor.y);
+        }
+    } else { document.getElementById('prompt').innerText = ""; }
+
+    document.getElementById('progress').innerText = `BOOKS: ${booksCollected} / ${BOOK_TARGET}`;
+    document.getElementById('lives').innerText = "❤️".repeat(Math.max(0, lives));
+}
+
+function makeRandomQuestion() {
+    const scienceHistoryPool = [
+        { q: "What planet is known as the Red Planet?", a: ["Mars", "Venus", "Mercury"], c: 0 },
+        { q: "What gas do plants absorb from the atmosphere?", a: ["Carbon dioxide", "Oxygen", "Nitrogen"], c: 0 },
+        { q: "Who proposed the theory of relativity?", a: ["Albert Einstein", "Isaac Newton", "Galileo Galilei"], c: 0 },
+        { q: "What is the chemical symbol for gold?", a: ["Au", "Ag", "Gd"], c: 0 },
+        { q: "What is the center of an atom called?", a: ["Nucleus", "Electron shell", "Molecule"], c: 0 },
+        { q: "What is H2O commonly known as?", a: ["Water", "Hydrogen peroxide", "Oxygen"], c: 0 },
+        { q: "Which blood cells help fight infection?", a: ["White blood cells", "Red blood cells", "Platelets"], c: 0 },
+        { q: "What force keeps planets in orbit around the Sun?", a: ["Gravity", "Magnetism", "Friction"], c: 0 },
+        { q: "Who discovered penicillin?", a: ["Alexander Fleming", "Louis Pasteur", "Marie Curie"], c: 0 },
+        { q: "What is the boiling point of water at sea level?", a: ["100 C", "90 C", "120 C"], c: 0 },
+        { q: "In which year did World War II end?", a: ["1945", "1939", "1950"], c: 0 },
+        { q: "Who was the first President of the United States?", a: ["George Washington", "Thomas Jefferson", "Abraham Lincoln"], c: 0 },
+        { q: "Which ancient civilization built the pyramids at Giza?", a: ["Ancient Egyptians", "Romans", "Mayans"], c: 0 },
+        { q: "The Renaissance began in which country?", a: ["Italy", "France", "England"], c: 0 },
+        { q: "Who was known as the Maid of Orleans?", a: ["Joan of Arc", "Cleopatra", "Queen Victoria"], c: 0 },
+        { q: "Which wall fell in 1989, symbolizing the Cold War's end?", a: ["Berlin Wall", "Great Wall of China", "Hadrian's Wall"], c: 0 },
+        { q: "Who wrote the U.S. Declaration of Independence?", a: ["Thomas Jefferson", "Benjamin Franklin", "John Adams"], c: 0 },
+        { q: "Which empire was ruled by Julius Caesar?", a: ["Roman Empire", "Ottoman Empire", "British Empire"], c: 0 },
+        { q: "What voyage in 1492 is Christopher Columbus known for?", a: ["Crossing the Atlantic", "Circumnavigating Earth", "Reaching India by land"], c: 0 },
+        { q: "Which event started on July 14, 1789 in France?", a: ["Storming of the Bastille", "Treaty of Versailles", "Napoleonic Wars"], c: 0 }
+    ];
+    return scienceHistoryPool[Math.floor(Math.random() * scienceHistoryPool.length)];
+}
+
+function generateQuestionPool(size) {
+    const pool = [];
+    const seen = new Set();
+    while (pool.length < size) {
+        const q = makeRandomQuestion();
+        if (seen.has(q.q)) continue;
+        seen.add(q.q);
+        pool.push(q);
+    }
+    return pool;
+}
+
+let quizQuestionPool = generateQuestionPool(QUESTION_POOL_SIZE);
+
+function startQuiz(book) {
+    quizActive = true;
+    document.exitPointerLock();
+    if (quizQuestionPool.length === 0) {
+        quizQuestionPool = generateQuestionPool(QUESTION_POOL_SIZE);
+    }
+    const qIndex = Math.floor(Math.random() * quizQuestionPool.length);
+    const q = quizQuestionPool[qIndex];
+    const options = q.a.map((text, idx) => ({ text, correct: idx === q.c }));
+    for (let i = options.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const temp = options[i];
+        options[i] = options[j];
+        options[j] = temp;
+    }
+    document.getElementById('question-text').innerText = q.q;
+    const ans = document.getElementById('answers');
+    ans.innerHTML = '';
+    options.forEach((opt) => {
+        const btn = document.createElement('button');
+        btn.className = 'ans-btn'; btn.innerText = opt.text;
+        btn.onclick = () => {
+            if(opt.correct) {
+                book.collected = true;
+                booksCollected++;
+                quizQuestionPool.splice(qIndex, 1);
+            } else {
+                respawnBook(book);
+            }
+            quizActive = false; document.getElementById('quiz-box').style.display = 'none';
+            canvas.requestPointerLock();
+        };
+        ans.appendChild(btn);
+    });
+    document.getElementById('quiz-box').style.display = 'block';
+}
+
+function draw() {
+    const w = canvas.width, h = canvas.height;
+    renderFloorAndCeiling(w, h);
+    const zBuf = zBuffer || new Float32Array(w);
+
+    // Wall Rendering
+    for(let x=0; x<w; x++) {
+        let camX = 2 * x / w - 1, rDX = dirX + planeX * camX, rDY = dirY + planeY * camX;
+        let mX = Math.floor(posX), mY = Math.floor(posY);
+        let dX = Math.abs(1/rDX), dY = Math.abs(1/rDY);
+        let sX, sY, sDX, sDY, hit = 0, side = 0;
+
+        if(rDX < 0) { sX = -1; sDX = (posX - mX) * dX; } else { sX = 1; sDX = (mX + 1 - posX) * dX; }
+        if(rDY < 0) { sY = -1; sDY = (posY - mY) * dY; } else { sY = 1; sDY = (mY + 1 - posY) * dY; }
+
+        while(hit === 0) {
+            if(sDX < sDY) { sDX += dX; mX += sX; side = 0; } else { sDY += dY; mY += sY; side = 1; }
+            const tile = getTile(mX, mY);
+            if(tile > 0) hit = tile;
+        }
+
+        let pwd = (side === 0) ? (sDX - dX) : (sDY - dY);
+        zBuf[x] = pwd;
+        let lH = Math.floor(h / pwd), start = (h/2) - (lH/2) + pitch;
+        
+        const tex = (hit === 4) ? doorImg : (hit === 7 ? escapeDoorImg : wallImg);
+        if (tex.complete && tex.naturalWidth > 0) {
+            let wallX = (side === 0) ? (posY + pwd * rDY) : (posX + pwd * rDX);
+            wallX -= Math.floor(wallX);
+            let texX = Math.floor(wallX * tex.width);
+            if (side === 0 && rDX > 0) texX = tex.width - texX - 1;
+            if (side === 1 && rDY < 0) texX = tex.width - texX - 1;
+            ctx.drawImage(tex, texX, 0, 1, tex.height, x, start, 1, lH);
+        } else {
+            ctx.fillStyle = (hit === 4) ? "#422" : (hit === 7 ? "#264" : (side === 1 ? "#222" : "#333"));
+            ctx.fillRect(x, start, 1, lH);
+        }
+        if (side === 1) {
+            ctx.fillStyle = "rgba(0,0,0,0.28)";
+            ctx.fillRect(x, start, 1, lH);
+        }
+    }
+
+    // Sprite Rendering
+    books.forEach(b => { if(!b.collected) renderSprite(b.x, b.y, zBuf, pitch, bookImg, "#f0f", false); });
+    renderSprite(enemy.x, enemy.y, zBuf, pitch, ghostImg, "#d9d9d9", true); // Enemy
+}
+
+function renderSprite(sx, sy, zBuf, pitch, img, color, isEnemy) {
+    let rX = sx - posX, rY = sy - posY;
+    let invD = 1.0 / (planeX * dirY - dirX * planeY);
+    let tX = invD * (dirY * rX - dirX * rY), tY = invD * (-planeY * rX + planeX * rY);
+    if (tY <= 0.1) return;
+    let sX = Math.floor((canvas.width/2) * (1 + tX / tY)), sH = Math.abs(Math.floor(canvas.height / tY));
+    if (sX > 0 && sX < canvas.width && tY < zBuf[sX]) {
+        let size = isEnemy ? sH/1.5 : sH/2;
+        if (img && img.complete && img.naturalWidth > 0) {
+            ctx.drawImage(img, sX - size/2, (canvas.height/2) - size/2 + pitch, size, size);
+        } else {
+            ctx.fillStyle = color;
+            ctx.fillRect(sX - size/2, (canvas.height/2) - size/2 + pitch, size, size);
+        }
+    }
+}
+
+document.addEventListener('mousemove', (e) => {
+    if (document.pointerLockElement === canvas && !quizActive && !gamePaused) {
+        let rot = e.movementX * mouseSensitivity;
+        let oldDX = dirX; dirX = dirX * Math.cos(rot) - dirY * Math.sin(rot); dirY = oldDX * Math.sin(rot) + dirY * Math.cos(rot);
+        let oldPX = planeX; planeX = planeX * Math.cos(rot) - planeY * Math.sin(rot); planeY = oldPX * Math.sin(rot) + planeY * Math.cos(rot);
+        pitch = Math.max(-100, Math.min(100, pitch - e.movementY * 0.8));
+    }
+});
+
+canvas.addEventListener('click', () => { if(!quizActive && !gamePaused) canvas.requestPointerLock(); });
+window.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+        e.preventDefault();
+        setPauseState(!gamePaused);
+        return;
+    }
+    if (gamePaused || gameWon) return;
+    keys[e.key.toLowerCase()] = true;
+});
+window.addEventListener('keyup', e => {
+    if (gamePaused || gameWon) return;
+    keys[e.key.toLowerCase()] = false;
+});
+
+let lastFrameMs = performance.now();
+let frameDeltaMs = 16.6667;
+function loop(nowMs) {
+    frameDeltaMs = nowMs - lastFrameMs;
+    lastFrameMs = nowMs;
+    update();
+    draw();
+    requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

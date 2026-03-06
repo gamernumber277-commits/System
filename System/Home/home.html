@@ -1,0 +1,2014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Lost Campus - Game Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a2e4a 0%, #1a4d7a 50%, #0d3a5c 100%);
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .game-container {
+            display: flex;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        /* ===== TOP HEADER ===== */
+        .top-header {
+            background: rgba(10, 30, 60, 0.9);
+            border-bottom: 2px solid #00d4ff;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            position: relative;
+            z-index: 300;
+        }
+
+        .player-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .player-avatar {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #ff416c, #ff4b2b);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 24px;
+            border: 3px solid #00d4ff;
+        }
+
+        .player-details span {
+            display: block;
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        .player-details strong {
+            display: block;
+            font-size: 14px;
+            color: #fff;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 170, 200, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 1px solid #00aac8;
+        }
+
+        .stat-item .icon {
+            font-size: 20px;
+        }
+
+        .stat-item .value {
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .top-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .top-menu,
+        .settings-menu {
+            position: relative;
+        }
+
+        .top-btn {
+            padding: 8px 15px;
+            background: rgba(0, 170, 200, 0.3);
+            border: 1px solid #00d4ff;
+            color: #00d4ff;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .top-btn:hover {
+            background: #00d4ff;
+            color: #0a2e4a;
+        }
+
+        .settings-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            min-width: 130px;
+            background: rgba(10, 30, 60, 0.95);
+            border: 1px solid #00aac8;
+            border-radius: 8px;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+            padding: 8px;
+            display: none;
+            z-index: 100;
+        }
+
+        .top-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            min-width: 260px;
+            max-height: 280px;
+            overflow-y: auto;
+            background: rgba(10, 30, 60, 0.95);
+            border: 1px solid #00aac8;
+            border-radius: 8px;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+            padding: 10px;
+            display: none;
+            z-index: 999;
+        }
+
+        .settings-dropdown.show {
+            display: block;
+        }
+
+        .top-dropdown.show {
+            display: block;
+        }
+
+        .friend-panel {
+            width: 560px;
+            max-width: min(560px, 92vw);
+            max-height: 520px;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .friend-panel-tabs {
+            display: flex;
+            border-bottom: 1px solid rgba(120, 170, 230, 0.45);
+            background: linear-gradient(180deg, rgba(67, 99, 164, 0.55) 0%, rgba(24, 43, 83, 0.55) 100%);
+        }
+
+        .friend-tab {
+            flex: 1;
+            border: 0;
+            background: transparent;
+            color: #cfdffd;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 10px 12px;
+            cursor: pointer;
+        }
+
+        .friend-tab.active {
+            color: #ffffff;
+            box-shadow: inset 0 -2px 0 #7dd8ff;
+        }
+
+        .friend-panel-body {
+            padding: 12px;
+            background: linear-gradient(180deg, rgba(22, 42, 82, 0.92) 0%, rgba(11, 24, 51, 0.92) 100%);
+        }
+
+        .friend-search-row {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .friend-search {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 4px;
+            border: 1px solid rgba(123, 174, 235, 0.65);
+            background: rgba(8, 20, 46, 0.9);
+            color: #d8ecff;
+            font-size: 13px;
+        }
+
+        .friend-search::placeholder {
+            color: #96b6de;
+        }
+
+        .search-mode-btn {
+            border: 1px solid rgba(120, 177, 242, 0.7);
+            background: rgba(69, 110, 177, 0.55);
+            color: #d8ecff;
+            border-radius: 4px;
+            font-size: 12px;
+            padding: 0 12px;
+            cursor: pointer;
+        }
+
+        .search-mode-btn.active {
+            background: rgba(96, 157, 240, 0.8);
+            color: #fff;
+        }
+
+        .friend-list {
+            max-height: 340px;
+            overflow-y: auto;
+            border: 1px solid rgba(111, 166, 227, 0.35);
+            border-radius: 6px;
+            background: rgba(8, 18, 42, 0.6);
+            padding: 8px;
+        }
+
+        .friend-row {
+            display: grid;
+            grid-template-columns: 30px 1fr auto;
+            gap: 8px;
+            align-items: center;
+            border-bottom: 1px solid rgba(90, 143, 207, 0.25);
+            padding: 9px 6px;
+        }
+
+        .friend-row:last-child {
+            border-bottom: 0;
+        }
+
+        .friend-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #4f8fd8, #19427e);
+            border: 1px solid rgba(164, 204, 255, 0.7);
+        }
+
+        .friend-meta {
+            min-width: 0;
+        }
+
+        .friend-name {
+            font-size: 13px;
+            color: #e7f3ff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .friend-sub {
+            font-size: 11px;
+            color: #9ec5ec;
+        }
+
+        .friend-add-btn {
+            border: 1px solid rgba(135, 185, 245, 0.75);
+            background: linear-gradient(180deg, rgba(121, 173, 236, 0.9), rgba(67, 113, 186, 0.9));
+            color: #fff;
+            border-radius: 4px;
+            padding: 6px 14px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .friend-add-btn:disabled {
+            opacity: 0.6;
+            cursor: default;
+        }
+
+        .friend-result {
+            font-size: 11px;
+            color: #b9dcff;
+            min-height: 14px;
+            margin-top: 6px;
+        }
+
+        .mail-empty {
+            color: #b9d8e0;
+            font-size: 12px;
+        }
+
+        .mail-panel {
+            width: 760px;
+            max-width: min(760px, 95vw);
+            height: 510px;
+            max-height: min(510px, 78vh);
+            padding: 0;
+            overflow: hidden;
+            border: 1px solid rgba(117, 178, 237, 0.8);
+            background: linear-gradient(180deg, rgba(34, 64, 116, 0.95) 0%, rgba(16, 33, 73, 0.96) 100%);
+        }
+
+        .mail-panel-shell {
+            display: grid;
+            grid-template-columns: 165px 1fr;
+            height: 100%;
+        }
+
+        .mail-panel-sidebar {
+            padding: 16px 10px;
+            border-right: 1px solid rgba(117, 178, 237, 0.35);
+            background: linear-gradient(180deg, rgba(27, 54, 100, 0.78), rgba(12, 26, 55, 0.78));
+        }
+
+        .mail-side-item {
+            width: 100%;
+            border: 0;
+            background: transparent;
+            color: #aec9eb;
+            font-size: 14px;
+            text-align: left;
+            padding: 10px 12px;
+            margin-bottom: 6px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .mail-side-item.active {
+            color: #eaf5ff;
+            background: linear-gradient(90deg, rgba(108, 183, 244, 0.55), rgba(108, 183, 244, 0.1));
+            box-shadow: inset 0 0 0 1px rgba(138, 204, 255, 0.6);
+        }
+
+        .mail-panel-main {
+            padding: 14px;
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .mail-header {
+            color: #e8f4ff;
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            line-height: 1;
+        }
+
+        .mail-list {
+            min-height: 0;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .mail-row {
+            display: grid;
+            grid-template-columns: 44px 1fr auto;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+            padding: 12px;
+            border: 1px solid rgba(124, 180, 239, 0.45);
+            border-radius: 6px;
+            background: rgba(84, 138, 211, 0.2);
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.2s ease;
+        }
+
+        .mail-row:hover {
+            background: rgba(120, 177, 243, 0.28);
+            transform: translateX(2px);
+        }
+
+        .mail-row.unread {
+            background: rgba(107, 177, 255, 0.32);
+            box-shadow: inset 0 0 0 1px rgba(162, 214, 255, 0.45);
+        }
+
+        .mail-row.selected {
+            box-shadow: inset 0 0 0 2px rgba(252, 214, 137, 0.85);
+            background: rgba(148, 198, 255, 0.28);
+        }
+
+        .mail-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #e9f6ff;
+            background: linear-gradient(180deg, rgba(121, 177, 238, 0.9), rgba(66, 114, 183, 0.92));
+            border: 1px solid rgba(174, 217, 255, 0.75);
+        }
+
+        .mail-content {
+            min-width: 0;
+        }
+
+        .mail-title {
+            color: #ecf7ff;
+            font-size: 16px;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .mail-subtitle {
+            color: #c2def8;
+            font-size: 13px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .mail-time {
+            color: #dbeeff;
+            font-size: 13px;
+            margin-left: 8px;
+        }
+
+        .mail-panel-empty {
+            color: #cde4fb;
+            font-size: 14px;
+            text-align: center;
+            padding: 30px 0;
+            border: 1px dashed rgba(126, 183, 241, 0.5);
+            border-radius: 6px;
+            background: rgba(40, 85, 150, 0.2);
+        }
+
+        .mail-detail {
+            border: 1px solid rgba(126, 183, 241, 0.42);
+            border-radius: 6px;
+            background: rgba(30, 67, 126, 0.3);
+            padding: 10px 12px;
+        }
+
+        .mail-detail-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #eef7ff;
+            margin-bottom: 6px;
+        }
+
+        .mail-detail-body {
+            font-size: 12px;
+            color: #cce3fa;
+            line-height: 1.45;
+            min-height: 34px;
+        }
+
+        .mail-request-actions {
+            margin-top: 10px;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .mail-request-actions.hidden {
+            display: none;
+        }
+
+        .mail-actions {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .mail-action-btn {
+            border: 1px solid rgba(140, 194, 250, 0.7);
+            border-radius: 4px;
+            font-size: 14px;
+            padding: 8px 10px;
+            color: #eaf6ff;
+            cursor: pointer;
+            background: linear-gradient(180deg, rgba(95, 143, 211, 0.82), rgba(56, 95, 162, 0.9));
+        }
+
+        .mail-action-btn.claim {
+            color: #fff6df;
+            border-color: rgba(249, 210, 139, 0.8);
+            background: linear-gradient(180deg, rgba(201, 157, 86, 0.9), rgba(150, 112, 55, 0.92));
+        }
+
+        .mail-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 999px;
+            background: #ff4b2b;
+            color: #fff;
+            border: 1px solid #fff;
+            font-size: 11px;
+            font-weight: 700;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+        }
+
+        .mail-badge.show {
+            display: inline-flex;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 8px 10px;
+            text-align: left;
+            background: transparent;
+            border: 1px solid transparent;
+            color: #fff;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 75, 43, 0.2);
+            border-color: #ff4b2b;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* LEFT SIDEBAR */
+        .left-sidebar {
+            width: 100px;
+            background: rgba(10, 30, 60, 0.8);
+            border-right: 1px solid #00aac8;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0;
+            gap: 20px;
+            overflow-y: auto;
+        }
+
+        .side-button {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #1a4d7a, #0d3a5c);
+            border: 2px solid #00aac8;
+            border-radius: 10px;
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            text-align: center;
+            transition: all 0.3s;
+            padding: 5px;
+        }
+
+        .side-button:hover {
+            background: linear-gradient(135deg, #00aac8, #00d4ff);
+            color: #0a2e4a;
+            transform: scale(1.05);
+        }
+
+        .side-button .icon {
+            font-size: 32px;
+            margin-bottom: 5px;
+        }
+
+        /* CENTER AREA */
+        .center-area {
+            flex: 1;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600"><defs><linearGradient id="sky" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:%230a5a8a;stop-opacity:1" /><stop offset="100%" style="stop-color:%231a7aaa;stop-opacity:1" /></linearGradient></defs><rect width="1200" height="600" fill="url(%23sky)"/></svg>');
+            background-size: cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .floating-island {
+            text-align: center;
+            position: relative;
+            z-index: 2;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .island-container {
+            width: 300px;
+            height: 250px;
+            background: linear-gradient(135deg, #6b8e23, #8fac2f);
+            border-radius: 50% 50% 40% 40%;
+            border: 3px solid #556b2f;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), inset -10px -10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .island-inner {
+            width: 280px;
+            height: 230px;
+            background: linear-gradient(to bottom, #7ba428, #5d8620);
+            border-radius: 50% 50% 40% 40%;
+            margin: 10px auto;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .game-preview {
+            width: 100%;
+            height: 100%;
+            border-radius: 50% 50% 40% 40%;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.25s ease, filter 0.25s ease;
+        }
+
+        .game-preview:hover {
+            transform: scale(1.03);
+            filter: saturate(1.1);
+        }
+
+        .game-preview::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.15) 35%, rgba(0, 0, 0, 0.65) 100%);
+        }
+
+        .preview-caption {
+            position: absolute;
+            left: 14px;
+            right: 14px;
+            bottom: 12px;
+            z-index: 2;
+            color: #fff;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.65);
+        }
+
+        .preview-caption .title {
+            display: block;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .preview-caption .sub {
+            display: block;
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .mode-animate-right {
+            animation: modeSlideRight 0.5s ease;
+        }
+
+        .mode-animate-left {
+            animation: modeSlideLeft 0.5s ease;
+        }
+
+        .circle-slide-right {
+            animation: circleSlideRight 0.5s ease;
+        }
+
+        .circle-slide-left {
+            animation: circleSlideLeft 0.5s ease;
+        }
+
+        @keyframes modeSlideRight {
+            0% { transform: translateX(48px); opacity: 0.2; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes modeSlideLeft {
+            0% { transform: translateX(-48px); opacity: 0.2; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes circleSlideRight {
+            0% { transform: translateX(430px) scale(0.9); opacity: 0; }
+            100% { transform: translateX(0) scale(1); opacity: 1; }
+        }
+
+        @keyframes circleSlideLeft {
+            0% { transform: translateX(-430px) scale(0.9); opacity: 0; }
+            100% { transform: translateX(0) scale(1); opacity: 1; }
+        }
+
+        .game-mode {
+            position: absolute;
+            bottom: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #d4af37, #f0c000);
+            color: #2c2c2c;
+            padding: 10px 40px;
+            border-radius: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            text-transform: uppercase;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            letter-spacing: 2px;
+        }
+
+        .game-mode::before,
+        .game-mode::after {
+            content: '';
+            position: absolute;
+            top: -8px;
+            width: 20px;
+            height: 20px;
+            background: #d4af37;
+            border-radius: 50%;
+        }
+
+        .game-mode::before {
+            left: 10px;
+        }
+
+        .game-mode::after {
+            right: 10px;
+        }
+
+        .mode-arrow {
+            position: absolute;
+            top: 50%;
+            color: #d4af37;
+            font-size: 32px;
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+
+        .mode-arrow:hover {
+            transform: scale(1.3);
+        }
+
+        .left-arrow {
+            left: 30px;
+            transform: translateY(-50%);
+        }
+
+        .right-arrow {
+            right: 30px;
+            transform: translateY(-50%);
+        }
+
+        /* RIGHT SIDEBAR */
+        .right-sidebar {
+            width: 280px;
+            background: rgba(10, 30, 60, 0.8);
+            border-left: 1px solid #00aac8;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .online-title {
+            font-size: 14px;
+            color: #00d4ff;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            font-weight: bold;
+            border-bottom: 1px solid #00aac8;
+            padding-bottom: 10px;
+        }
+
+        .player-item {
+            background: rgba(0, 170, 200, 0.1);
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 3px solid #00d4ff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+
+        .player-item:hover {
+            background: rgba(0, 170, 200, 0.3);
+        }
+
+        .player-item .avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #ff416c, #ff4b2b);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            border: 2px solid #00d4ff;
+        }
+
+        .player-item .info {
+            flex: 1;
+        }
+
+        .player-item .name {
+            font-size: 12px;
+            color: #fff;
+            margin-bottom: 3px;
+        }
+
+        .player-item .level {
+            font-size: 10px;
+            color: #00d4ff;
+        }
+
+        .player-item .status {
+            width: 8px;
+            height: 8px;
+            background: #00ff00;
+            border-radius: 50%;
+        }
+
+        /* ===== BOTTOM NAVIGATION ===== */
+        .bottom-nav {
+            background: rgba(10, 30, 60, 0.95);
+            border-top: 2px solid #00aac8;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 15px 0;
+            gap: 5px;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            padding: 8px 12px;
+            border-radius: 8px;
+            flex: 1;
+        }
+
+        .nav-item:hover {
+            background: rgba(0, 170, 200, 0.3);
+            color: #00d4ff;
+        }
+
+        .nav-item .icon {
+            font-size: 24px;
+        }
+
+        .nav-item .label {
+            font-size: 11px;
+            text-align: center;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 170, 200, 0.1);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #00aac8;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00d4ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- TOP HEADER -->
+        <div class="top-header">
+            <div class="player-info">
+                <div class="player-avatar" id="playerAvatar">P</div>
+                <div class="player-details">
+                    <strong id="playerName">Player Name</strong>
+                    <span>Level <span id="playerLevel">0</span></span>
+                </div>
+            </div>
+
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <span class="icon">💰</span>
+                    <span class="value" id="coinsValue">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="icon">💎</span>
+                    <span class="value" id="gemsValue">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="icon">⭐</span>
+                    <span class="value" id="starsValue">0</span>
+                </div>
+            </div>
+
+            <div class="top-buttons">
+                <div class="settings-menu">
+                    <button id="settingsBtn" class="top-btn" type="button">⚙️</button>
+                    <div id="settingsDropdown" class="settings-dropdown">
+                        <button id="logoutBtn" class="logout-btn" type="button">Log out</button>
+                    </div>
+                </div>
+                <div class="top-menu">
+                    <button id="addFriendBtn" class="top-btn" type="button">👥</button>
+                    <div id="addFriendDropdown" class="top-dropdown friend-panel">
+                        <div class="friend-panel-tabs">
+                            <button id="addFriendsTab" class="friend-tab active" type="button">Add Friends</button>
+                            <button id="nearbyTab" class="friend-tab" type="button">Nearby</button>
+                        </div>
+                        <div class="friend-panel-body">
+                            <div class="friend-search-row">
+                                <input id="friendSearchInput" class="friend-search" type="text" placeholder="Tap to Enter Name or ID">
+                                <button id="nameSearchBtn" class="search-mode-btn active" type="button">Name Search</button>
+                                <button id="idSearchBtn" class="search-mode-btn" type="button">ID Search</button>
+                            </div>
+                            <div id="friendList" class="friend-list"></div>
+                            <div id="friendSearchResult" class="friend-result"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="top-menu">
+                    <button id="mailBtn" class="top-btn" type="button">📧</button>
+                    <span id="mailBadge" class="mail-badge">0</span>
+                    <div id="mailDropdown" class="top-dropdown mail-panel">
+                        <div class="mail-panel-shell">
+                            <div class="mail-panel-sidebar">
+                                <button class="mail-side-item" data-mail-category="inbox">Inbox</button>
+                                <button class="mail-side-item active" data-mail-category="system">System</button>
+                                <button class="mail-side-item" data-mail-category="report">Report Mail</button>
+                                <button class="mail-side-item" data-mail-category="important">Important Notice</button>
+                                <button class="mail-side-item" data-mail-category="gifts">Gifts</button>
+                            </div>
+                            <div class="mail-panel-main">
+                                <div class="mail-header">MAIL - <span id="mailCategoryLabel">System</span></div>
+                                <div id="mailList" class="mail-list">
+                                    <div id="mailItems"></div>
+                                    <div id="mailEmpty" class="mail-panel-empty">No friend request mails yet.</div>
+                                </div>
+                                <div id="mailDetail" class="mail-detail">
+                                    <div id="mailDetailTitle" class="mail-detail-title">Select a mail</div>
+                                    <div id="mailDetailBody" class="mail-detail-body">Open any mail row to see full message.</div>
+                                    <div id="mailRequestActions" class="mail-request-actions">
+                                        <button id="mailAcceptBtn" class="mail-action-btn claim" type="button">Accept</button>
+                                        <button id="mailDeclineBtn" class="mail-action-btn" type="button">Decline</button>
+                                    </div>
+                                </div>
+                                <div class="mail-actions">
+                                    <button id="mailDeleteAllBtn" class="mail-action-btn" type="button">Delete All</button>
+                                    <button id="mailMarkReadBtn" class="mail-action-btn" type="button">Mark All as Read</button>
+                                    <button id="mailClaimAllBtn" class="mail-action-btn claim" type="button">Claim All</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <!-- CENTER AREA -->
+            <div class="center-area">
+                <span class="mode-arrow left-arrow" id="leftModeArrow">&#9664;</span>
+                <div class="floating-island">
+                    <div class="island-container" id="islandContainer">
+                        <div class="island-inner">
+                            <div class="game-preview" id="gamePreview">
+                                <div class="preview-caption">
+                                    <span class="title" id="gamePreviewTitle">Maze</span>
+                                    <span class="sub" id="gamePreviewSub">Twisted paths and escape routes</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="game-mode" id="gameModeLabel">Maze</div>
+                </div>
+                <span class="mode-arrow right-arrow" id="rightModeArrow">&#9654;</span>
+            </div>
+
+            <!-- RIGHT SIDEBAR -->
+            <div class="right-sidebar">
+                <div id="friendsTitle" class="online-title">Friends (0)</div>
+                <div id="friendsList"></div>
+            </div>
+        </div>
+
+        <!-- BOTTOM NAVIGATION -->
+        <div class="bottom-nav">
+            <div class="nav-item" onclick="navigate('shop')">
+                <span class="icon">🛒</span>
+                <span class="label">Shop</span>
+            </div>
+            <div class="nav-item" onclick="navigate('achievement')">
+                <span class="icon">🏆</span>
+                <span class="label">Achievement</span>
+            </div>
+            <div class="nav-item" onclick="navigate('leaderboard')">
+                <span class="icon">👥</span>
+                <span class="label">Leaderboard</span>
+            </div>
+        </div>
+    </div>
+
+        <script>
+        function navigate(section) {
+            if (section === 'battle') {
+                window.location.href = 'http://localhost:3000';
+                return;
+            }
+            if (section === 'leaderboard') {
+                window.location.href = '../Leaderboard/leaderboard.html';
+                return;
+            }
+            console.log('Navigating to:', section);
+            alert('Coming Soon: ' + section);
+        }
+
+        const settingsBtn = document.getElementById('settingsBtn');
+        const settingsDropdown = document.getElementById('settingsDropdown');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const playerNameEl = document.getElementById('playerName');
+        const playerAvatarEl = document.getElementById('playerAvatar');
+        const playerLevelEl = document.getElementById('playerLevel');
+        const coinsValueEl = document.getElementById('coinsValue');
+        const gemsValueEl = document.getElementById('gemsValue');
+        const starsValueEl = document.getElementById('starsValue');
+        const gameModeLabel = document.getElementById('gameModeLabel');
+        const gamePreview = document.getElementById('gamePreview');
+        const gamePreviewTitle = document.getElementById('gamePreviewTitle');
+        const gamePreviewSub = document.getElementById('gamePreviewSub');
+        const islandContainer = document.getElementById('islandContainer');
+        const leftModeArrow = document.getElementById('leftModeArrow');
+        const rightModeArrow = document.getElementById('rightModeArrow');
+        const addFriendBtn = document.getElementById('addFriendBtn');
+        const addFriendDropdown = document.getElementById('addFriendDropdown');
+        const friendSearchInput = document.getElementById('friendSearchInput');
+        const friendSearchResult = document.getElementById('friendSearchResult');
+        const friendList = document.getElementById('friendList');
+        const nameSearchBtn = document.getElementById('nameSearchBtn');
+        const idSearchBtn = document.getElementById('idSearchBtn');
+        const addFriendsTab = document.getElementById('addFriendsTab');
+        const nearbyTab = document.getElementById('nearbyTab');
+        const mailBtn = document.getElementById('mailBtn');
+        const mailDropdown = document.getElementById('mailDropdown');
+        const mailBadge = document.getElementById('mailBadge');
+        const mailList = document.getElementById('mailList');
+        const mailItems = document.getElementById('mailItems');
+        const mailEmpty = document.getElementById('mailEmpty');
+        const mailDeleteAllBtn = document.getElementById('mailDeleteAllBtn');
+        const mailMarkReadBtn = document.getElementById('mailMarkReadBtn');
+        const mailClaimAllBtn = document.getElementById('mailClaimAllBtn');
+        const mailSideItems = Array.from(document.querySelectorAll('.mail-side-item'));
+        const mailCategoryLabel = document.getElementById('mailCategoryLabel');
+        const mailDetail = document.getElementById('mailDetail');
+        const mailDetailTitle = document.getElementById('mailDetailTitle');
+        const mailDetailBody = document.getElementById('mailDetailBody');
+        const mailRequestActions = document.getElementById('mailRequestActions');
+        const mailAcceptBtn = document.getElementById('mailAcceptBtn');
+        const mailDeclineBtn = document.getElementById('mailDeclineBtn');
+        const friendsTitle = document.getElementById('friendsTitle');
+        const friendsList = document.getElementById('friendsList');
+
+        const FRIEND_REQUEST_STORAGE_KEY = 'lostCampusFriendRequests';
+        const FRIENDS_STORAGE_KEY = 'lostCampusFriends';
+        const MAILBOX_STORAGE_KEY = 'lostCampusMailbox';
+        const FRIEND_SEARCH_API_URL = '../Login/friend_search.php';
+        let currentUsername = 'Guest';
+        let friendSearchMode = 'name';
+        let currentMailCategory = 'system';
+        let selectedMailKey = '';
+        let dbFriendPlayers = [];
+        let friendSearchRequestSeq = 0;
+        let friendSearchDebounceTimer = null;
+
+        function getCurrentUsername() {
+            if (currentUsername && currentUsername.trim()) {
+                return currentUsername.trim();
+            }
+            if (playerNameEl && playerNameEl.textContent.trim()) {
+                return playerNameEl.textContent.trim();
+            }
+            return 'Guest';
+        }
+
+        function normalizeName(name) {
+            return String(name || '').trim().toLowerCase();
+        }
+
+        function readFriendRequests() {
+            try {
+                const raw = localStorage.getItem(FRIEND_REQUEST_STORAGE_KEY);
+                if (!raw) return [];
+                const parsed = JSON.parse(raw);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (error) {
+                return [];
+            }
+        }
+
+        function writeFriendRequests(requests) {
+            localStorage.setItem(FRIEND_REQUEST_STORAGE_KEY, JSON.stringify(requests));
+        }
+
+        function readFriends() {
+            try {
+                const raw = localStorage.getItem(FRIENDS_STORAGE_KEY);
+                if (!raw) return [];
+                const parsed = JSON.parse(raw);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (error) {
+                return [];
+            }
+        }
+
+        function writeFriends(friends) {
+            localStorage.setItem(FRIENDS_STORAGE_KEY, JSON.stringify(friends));
+        }
+
+        function getCurrentUserFriends() {
+            const me = normalizeName(getCurrentUsername());
+            const friends = readFriends()
+                .filter(function (entry) { return normalizeName(entry.owner) === me; })
+                .map(function (entry) { return String(entry.friend || '').trim(); })
+                .filter(Boolean);
+            const unique = [];
+            friends.forEach(function (name) {
+                if (!unique.some(function (v) { return normalizeName(v) === normalizeName(name); })) {
+                    unique.push(name);
+                }
+            });
+            return unique;
+        }
+
+        function areFriends(userA, userB) {
+            const a = normalizeName(userA);
+            const b = normalizeName(userB);
+            return readFriends().some(function (entry) {
+                return normalizeName(entry.owner) === a && normalizeName(entry.friend) === b;
+            });
+        }
+
+        function addFriendBidirectional(userA, userB) {
+            const a = String(userA || '').trim();
+            const b = String(userB || '').trim();
+            if (!a || !b) return;
+
+            const list = readFriends();
+            const addOne = function (owner, friend) {
+                const exists = list.some(function (entry) {
+                    return normalizeName(entry.owner) === normalizeName(owner) &&
+                        normalizeName(entry.friend) === normalizeName(friend);
+                });
+                if (!exists) {
+                    list.push({
+                        owner: owner,
+                        friend: friend,
+                        since: new Date().toISOString()
+                    });
+                }
+            };
+
+            addOne(a, b);
+            addOne(b, a);
+            writeFriends(list);
+        }
+
+        function removeFriendRequestById(mailId) {
+            const myName = normalizeName(getCurrentUsername());
+            const all = readFriendRequests();
+            const userRequests = all.filter(function (request) {
+                return normalizeName(request.to) === myName;
+            });
+
+            let target = null;
+            userRequests.forEach(function (request, index) {
+                const requestKey = request.id
+                    ? ('friend-' + String(request.id))
+                    : ('friend-' + String(request.from || '') + '-' + String(request.to || '') + '-' + String(request.createdAt || '') + '-' + String(index));
+                if (requestKey === mailId) target = request;
+            });
+
+            if (!target) return null;
+
+            const remaining = all.filter(function (request) { return request !== target; });
+            writeFriendRequests(remaining);
+            return target;
+        }
+
+        function renderFriendsSidebar() {
+            if (!friendsTitle || !friendsList) return;
+            const friends = getCurrentUserFriends();
+            friendsTitle.textContent = 'Friends (' + friends.length + ')';
+
+            if (!friends.length) {
+                friendsList.innerHTML = '<div class="mail-empty">No friends yet.</div>';
+                return;
+            }
+
+            friendsList.innerHTML = friends.map(function (name) {
+                return '<div class="player-item">' +
+                    '<div class="avatar">' + name.charAt(0).toUpperCase() + '</div>' +
+                    '<div class="info">' +
+                    '<div class="name">' + name + '</div>' +
+                    '<div class="level">Your friend</div>' +
+                    '</div>' +
+                    '<div class="status"></div>' +
+                    '</div>';
+            }).join('');
+        }
+
+        function getDefaultMailboxMails() {
+            return [
+                {
+                    id: 'sys-removal',
+                    category: 'system',
+                    title: 'Removal of Event Items',
+                    body: 'System update completed. Some event items were removed.',
+                    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+                    read: false,
+                    claimable: false
+                },
+                {
+                    id: 'sys-survey',
+                    category: 'system',
+                    title: 'Event Experience Feedback Survey',
+                    body: 'Share your feedback and help us improve events.',
+                    createdAt: new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString(),
+                    read: false,
+                    claimable: false
+                },
+                {
+                    id: 'report-fairplay',
+                    category: 'report',
+                    title: 'Report Review Update',
+                    body: 'Your recent report has been reviewed by the moderation team.',
+                    createdAt: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
+                    read: true,
+                    claimable: false
+                },
+                {
+                    id: 'important-security',
+                    category: 'important',
+                    title: 'Account Security Reminder',
+                    body: 'Keep your password private and enable extra security options.',
+                    createdAt: new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString(),
+                    read: false,
+                    claimable: false
+                },
+                {
+                    id: 'gift-daily',
+                    category: 'gifts',
+                    title: 'Daily Reward Pack',
+                    body: 'Claim your daily reward pack now.',
+                    createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+                    read: false,
+                    claimable: true,
+                    claimed: false
+                }
+            ];
+        }
+
+        function readMailboxMails() {
+            try {
+                const raw = localStorage.getItem(MAILBOX_STORAGE_KEY);
+                if (!raw) {
+                    const defaults = getDefaultMailboxMails();
+                    localStorage.setItem(MAILBOX_STORAGE_KEY, JSON.stringify(defaults));
+                    return defaults;
+                }
+                const parsed = JSON.parse(raw);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (error) {
+                return getDefaultMailboxMails();
+            }
+        }
+
+        function writeMailboxMails(mails) {
+            localStorage.setItem(MAILBOX_STORAGE_KEY, JSON.stringify(mails));
+        }
+
+        function getPlayerDirectory() {
+            if (Array.isArray(dbFriendPlayers) && dbFriendPlayers.length) {
+                return dbFriendPlayers;
+            }
+            return [];
+        }
+
+        function requestFriendDirectoryFromDatabase() {
+            const query = friendSearchInput ? friendSearchInput.value.trim() : '';
+            const mode = friendSearchMode === 'id' ? 'id' : 'name';
+            const requestId = ++friendSearchRequestSeq;
+
+            if (friendList) {
+                friendList.innerHTML = '<div class="mail-empty">Loading players from database...</div>';
+            }
+
+            fetch(FRIEND_SEARCH_API_URL + '?mode=' + encodeURIComponent(mode) + '&q=' + encodeURIComponent(query), {
+                credentials: 'include'
+            })
+                .then(function (response) {
+                    if (!response.ok) {
+                        throw new Error('Failed to search players');
+                    }
+                    return response.json();
+                })
+                .then(function (data) {
+                    if (requestId !== friendSearchRequestSeq) return;
+
+                    if (data && data.ok && Array.isArray(data.players)) {
+                        dbFriendPlayers = data.players.map(function (player) {
+                            return {
+                                id: String(player.id || ''),
+                                name: String(player.name || ''),
+                                level: String(player.level || 'LV ?'),
+                                status: String(player.status || 'Player')
+                            };
+                        }).filter(function (player) {
+                            return player.name.trim() !== '';
+                        });
+                    } else {
+                        dbFriendPlayers = [];
+                    }
+
+                    if (friendSearchResult && query) {
+                        friendSearchResult.textContent = dbFriendPlayers.length
+                            ? ('Found ' + dbFriendPlayers.length + ' player(s) from database.')
+                            : 'No matching username in database.';
+                    }
+                    renderFriendDirectory();
+                })
+                .catch(function () {
+                    if (requestId !== friendSearchRequestSeq) return;
+                    dbFriendPlayers = [];
+                    if (friendSearchResult && query) {
+                        friendSearchResult.textContent = 'Database search unavailable. Showing local list.';
+                    }
+                    renderFriendDirectory();
+                });
+        }
+
+        function scheduleFriendDirectoryFetch() {
+            if (friendSearchDebounceTimer) {
+                clearTimeout(friendSearchDebounceTimer);
+            }
+            friendSearchDebounceTimer = setTimeout(function () {
+                requestFriendDirectoryFromDatabase();
+            }, 220);
+        }
+
+        function getSentTargetsByCurrentUser() {
+            const sender = normalizeName(getCurrentUsername());
+            return readFriendRequests()
+                .filter(function (request) { return normalizeName(request.from) === sender; })
+                .map(function (request) { return normalizeName(request.to); });
+        }
+
+        function renderFriendDirectory() {
+            if (!friendList) return;
+            const query = normalizeName(friendSearchInput ? friendSearchInput.value : '');
+            const players = getPlayerDirectory().filter(function (player) {
+                if (!query) return true;
+                if (friendSearchMode === 'id') return normalizeName(player.id).includes(query);
+                return normalizeName(player.name).includes(query);
+            });
+            const sentTargets = getSentTargetsByCurrentUser();
+
+            if (!players.length) {
+                friendList.innerHTML = '<div class="mail-empty">No players found.</div>';
+                return;
+            }
+
+            friendList.innerHTML = players.map(function (player) {
+                const alreadySent = sentTargets.includes(normalizeName(player.name));
+                const alreadyFriend = areFriends(getCurrentUsername(), player.name);
+                const buttonLabel = alreadyFriend ? 'Friend' : (alreadySent ? 'Sent' : 'Add');
+                const disabledAttr = (alreadySent || alreadyFriend) ? ' disabled' : '';
+                return '<div class="friend-row">' +
+                    '<div class="friend-avatar">' + player.name.charAt(0).toUpperCase() + '</div>' +
+                    '<div class="friend-meta">' +
+                    '<div class="friend-name">' + player.name + '</div>' +
+                    '<div class="friend-sub">' + player.level + ' - ID ' + player.id + ' - ' + player.status + '</div>' +
+                    '</div>' +
+                    '<button class="friend-add-btn" data-player-name="' + player.name + '"' + disabledAttr + '>' + buttonLabel + '</button>' +
+                    '</div>';
+            }).join('');
+        }
+
+        function formatMailTime(isoString) {
+            const value = new Date(isoString);
+            if (Number.isNaN(value.getTime())) return 'Today';
+            const now = new Date();
+            const dayMs = 24 * 60 * 60 * 1000;
+            const days = Math.floor((now - value) / dayMs);
+            if (days <= 0) return 'Today';
+            if (days === 1) return '1 day ago';
+            return String(days) + ' days ago';
+        }
+
+        function getMailCategoryLabel(category) {
+            const labels = {
+                inbox: 'Inbox',
+                system: 'System',
+                report: 'Report Mail',
+                important: 'Important Notice',
+                gifts: 'Gifts'
+            };
+            return labels[category] || 'Inbox';
+        }
+
+        function getFriendRequestMailsForCurrentUser() {
+            const myName = normalizeName(getCurrentUsername());
+            return readFriendRequests()
+                .filter(function (request) {
+                    return normalizeName(request.to) === myName;
+                })
+                .map(function (request, index) {
+                    return {
+                        id: request.id
+                            ? ('friend-' + String(request.id))
+                            : ('friend-' + String(request.from || '') + '-' + String(request.to || '') + '-' + String(request.createdAt || '') + '-' + String(index)),
+                        source: 'friend-request',
+                        category: 'inbox',
+                        title: 'Friend Request',
+                        body: request.from + ' is requesting for friend request.',
+                        createdAt: request.createdAt,
+                        read: request.read === true,
+                        claimable: false,
+                        from: request.from
+                    };
+                });
+        }
+
+        function getVisibleMails() {
+            const baseMails = readMailboxMails().map(function (mail) {
+                return Object.assign({}, mail, { source: 'mailbox' });
+            });
+            const friendMails = getFriendRequestMailsForCurrentUser();
+            const allMails = baseMails.concat(friendMails);
+
+            if (currentMailCategory === 'inbox') {
+                return allMails;
+            }
+            if (currentMailCategory === 'system') {
+                return allMails.filter(function (mail) {
+                    return mail.category === 'system' || mail.source === 'friend-request';
+                });
+            }
+            return allMails.filter(function (mail) {
+                return mail.category === currentMailCategory;
+            });
+        }
+
+        function markFriendRequestsAsRead() {
+            const myName = normalizeName(getCurrentUsername());
+            const updated = readFriendRequests().map(function (request) {
+                if (normalizeName(request.to) === myName) {
+                    return Object.assign({}, request, { read: true });
+                }
+                return request;
+            });
+            writeFriendRequests(updated);
+        }
+
+        function renderMailBox() {
+            if (!mailItems || !mailEmpty) return;
+            const mails = getVisibleMails()
+                .sort(function (a, b) {
+                    const aTime = new Date(a.createdAt || 0).getTime();
+                    const bTime = new Date(b.createdAt || 0).getTime();
+                    return bTime - aTime;
+                });
+
+            if (mailCategoryLabel) {
+                mailCategoryLabel.textContent = getMailCategoryLabel(currentMailCategory);
+            }
+
+            if (!mails.length) {
+                mailItems.innerHTML = '';
+                mailEmpty.style.display = 'block';
+                selectedMailKey = '';
+            } else {
+                mailEmpty.style.display = 'none';
+                const selectedExists = mails.some(function (mail) {
+                    return (mail.source + '|' + mail.id) === selectedMailKey;
+                });
+                if (!selectedExists && mails.length) {
+                    selectedMailKey = mails[0].source + '|' + mails[0].id;
+                }
+
+                mailItems.innerHTML = mails.map(function (mail) {
+                    const unread = mail.read !== true;
+                    const unreadClass = unread ? ' unread' : '';
+                    const key = mail.source + '|' + mail.id;
+                    const selectedClass = selectedMailKey === key ? ' selected' : '';
+                    return '<div class="mail-row' + unreadClass + selectedClass + '" data-mail-id="' + mail.id + '" data-mail-source="' + mail.source + '">' +
+                        '<div class="mail-icon">✉</div>' +
+                        '<div class="mail-content">' +
+                        '<div class="mail-title">' + mail.title + '</div>' +
+                        '<div class="mail-subtitle">' + mail.body + '</div>' +
+                        '</div>' +
+                        '<div class="mail-time">' + formatMailTime(mail.createdAt) + '</div>' +
+                        '</div>';
+                }).join('');
+            }
+
+            const selectedMail = mails.find(function (mail) {
+                return (mail.source + '|' + mail.id) === selectedMailKey;
+            }) || null;
+            if (mailDetailTitle && mailDetailBody && mailRequestActions) {
+                if (!selectedMail) {
+                    mailDetailTitle.textContent = 'Select a mail';
+                    mailDetailBody.textContent = 'Open any mail row to see full message.';
+                    mailRequestActions.classList.add('hidden');
+                } else {
+                    mailDetailTitle.textContent = selectedMail.title;
+                    mailDetailBody.textContent = selectedMail.body;
+                    if (selectedMail.source === 'friend-request') {
+                        mailRequestActions.classList.remove('hidden');
+                    } else {
+                        mailRequestActions.classList.add('hidden');
+                    }
+                }
+            }
+
+            const unreadCount = getVisibleMails().filter(function (mail) { return mail.read !== true; }).length;
+            if (mailBadge) {
+                mailBadge.textContent = String(unreadCount);
+                mailBadge.classList.toggle('show', unreadCount > 0);
+            }
+        }
+
+        function markMailItemAsRead(mailId, source) {
+            if (source === 'friend-request') {
+                const myName = normalizeName(getCurrentUsername());
+                const allRequests = readFriendRequests();
+                const filtered = allRequests.filter(function (request) {
+                    return normalizeName(request.to) === myName;
+                });
+                let matched = null;
+                filtered.forEach(function (request, index) {
+                    const generatedId = request.id
+                        ? ('friend-' + String(request.id))
+                        : ('friend-' + String(request.from || '') + '-' + String(request.to || '') + '-' + String(request.createdAt || '') + '-' + String(index));
+                    if (generatedId === mailId) matched = request;
+                });
+                if (!matched) return;
+                const updatedRequests = allRequests.map(function (request) {
+                    if (request === matched) {
+                        return Object.assign({}, request, { read: true });
+                    }
+                    return request;
+                });
+                writeFriendRequests(updatedRequests);
+                return;
+            }
+
+            const updatedMails = readMailboxMails().map(function (mail) {
+                if (mail.id === mailId) {
+                    return Object.assign({}, mail, { read: true });
+                }
+                return mail;
+            });
+            writeMailboxMails(updatedMails);
+        }
+
+        function deleteMailsByCurrentCategory() {
+            if (currentMailCategory === 'inbox' || currentMailCategory === 'system') {
+                const myName = normalizeName(getCurrentUsername());
+                const keepRequests = readFriendRequests().filter(function (request) {
+                    return normalizeName(request.to) !== myName;
+                });
+                writeFriendRequests(keepRequests);
+            }
+
+            const remaining = readMailboxMails().filter(function (mail) {
+                if (currentMailCategory === 'inbox') return false;
+                if (currentMailCategory === 'system') return mail.category !== 'system';
+                return mail.category !== currentMailCategory;
+            });
+            writeMailboxMails(remaining);
+        }
+
+        function markMailsReadByCurrentCategory() {
+            if (currentMailCategory === 'inbox' || currentMailCategory === 'system') {
+                markFriendRequestsAsRead();
+            }
+
+            const updated = readMailboxMails().map(function (mail) {
+                const shouldMark = currentMailCategory === 'inbox' || mail.category === currentMailCategory;
+                if (!shouldMark) return mail;
+                return Object.assign({}, mail, { read: true });
+            });
+            writeMailboxMails(updated);
+        }
+
+        function claimMailsByCurrentCategory() {
+            const updated = readMailboxMails().map(function (mail) {
+                const inScope = currentMailCategory === 'inbox' || currentMailCategory === 'gifts' || currentMailCategory === 'system';
+                if (!inScope) return mail;
+                if (!mail.claimable || mail.claimed) return mail;
+                return Object.assign({}, mail, { claimed: true, read: true });
+            });
+            writeMailboxMails(updated);
+        }
+
+        function sendFriendRequest(targetName) {
+            if (!friendSearchResult) return;
+            const sender = getCurrentUsername();
+            const targetPlayer = String(targetName || '').trim();
+            if (!targetPlayer) {
+                friendSearchResult.textContent = 'Player not found.';
+                return;
+            }
+
+            if (normalizeName(targetPlayer) === normalizeName(sender)) {
+                friendSearchResult.textContent = 'You cannot add yourself.';
+                return;
+            }
+
+            if (areFriends(sender, targetPlayer)) {
+                friendSearchResult.textContent = targetPlayer + ' is already your friend.';
+                return;
+            }
+
+            const requests = readFriendRequests();
+            const exists = requests.some(function (request) {
+                return normalizeName(request.from) === normalizeName(sender) &&
+                    normalizeName(request.to) === normalizeName(targetPlayer);
+            });
+
+            if (exists) {
+                friendSearchResult.textContent = 'Friend request already sent to ' + targetPlayer + '.';
+                return;
+            }
+
+            requests.push({
+                id: String(Date.now()) + '-' + String(Math.floor(Math.random() * 100000)),
+                from: sender,
+                to: targetPlayer,
+                createdAt: new Date().toISOString(),
+                read: false
+            });
+            writeFriendRequests(requests);
+            friendSearchResult.textContent = 'Friend request sent to ' + targetPlayer + '.';
+            renderMailBox();
+            renderFriendDirectory();
+        }
+
+        const gameModes = [
+            {
+                name: 'Maze',
+                subtitle: 'Twisted paths and escape routes',
+                link: '../Maze/index.html',
+                theme: 'linear-gradient(135deg, #2d7a3d 0%, #0f3f2f 100%)'
+            },
+            {
+                name: 'Platform',
+                subtitle: 'Jump timing and precision control',
+                link: '../Platform/platform.html',
+                theme: 'linear-gradient(135deg, #5fa8ff 0%, #193b8f 100%)'
+            },
+            {
+                name: 'IQ Game',
+                subtitle: 'Pattern solving and brain challenges',
+                link: 'http://localhost/System/IQ%20Games/index.html',
+                theme: 'linear-gradient(135deg, #843fd3 0%, #301b6d 100%)'
+            }
+        ];
+
+        let currentGameModeIndex = 0;
+
+        function goToCurrentGame() {
+            const mode = gameModes[currentGameModeIndex];
+            if (!mode || !mode.link) return;
+            window.location.href = mode.link;
+        }
+
+        function renderGameMode(direction) {
+            const mode = gameModes[currentGameModeIndex];
+            if (!mode) return;
+
+            if (gameModeLabel) gameModeLabel.textContent = mode.name;
+            if (gamePreviewTitle) gamePreviewTitle.textContent = mode.name;
+            if (gamePreviewSub) gamePreviewSub.textContent = mode.subtitle;
+
+            if (gamePreview) {
+                gamePreview.style.backgroundImage = mode.theme;
+                gamePreview.classList.remove('mode-animate-left', 'mode-animate-right');
+                void gamePreview.offsetWidth;
+                if (direction === 'left') gamePreview.classList.add('mode-animate-left');
+                if (direction === 'right') gamePreview.classList.add('mode-animate-right');
+            }
+
+            if (islandContainer) {
+                islandContainer.classList.remove('circle-slide-left', 'circle-slide-right');
+                void islandContainer.offsetWidth;
+                if (direction === 'left') islandContainer.classList.add('circle-slide-left');
+                if (direction === 'right') islandContainer.classList.add('circle-slide-right');
+            }
+
+        }
+
+        if (leftModeArrow && rightModeArrow) {
+            leftModeArrow.addEventListener('click', function () {
+                currentGameModeIndex = (currentGameModeIndex - 1 + gameModes.length) % gameModes.length;
+                renderGameMode('left');
+            });
+
+            rightModeArrow.addEventListener('click', function () {
+                currentGameModeIndex = (currentGameModeIndex + 1) % gameModes.length;
+                renderGameMode('right');
+            });
+        }
+
+        if (gamePreview) {
+            gamePreview.addEventListener('click', goToCurrentGame);
+        }
+
+        if (islandContainer) {
+            islandContainer.addEventListener('click', goToCurrentGame);
+        }
+
+        if (gameModeLabel) {
+            gameModeLabel.addEventListener('click', goToCurrentGame);
+        }
+
+        if (addFriendBtn && addFriendDropdown) {
+            addFriendBtn.addEventListener('click', function (event) {
+                event.stopPropagation();
+                addFriendDropdown.classList.toggle('show');
+                if (mailDropdown) mailDropdown.classList.remove('show');
+                if (settingsDropdown) settingsDropdown.classList.remove('show');
+                if (addFriendDropdown.classList.contains('show')) {
+                    if (friendSearchInput) friendSearchInput.focus();
+                    if (friendSearchResult) friendSearchResult.textContent = '';
+                    requestFriendDirectoryFromDatabase();
+                }
+            });
+        }
+
+        if (friendSearchInput && friendSearchResult) {
+            friendSearchInput.addEventListener('input', function () {
+                friendSearchResult.textContent = '';
+                scheduleFriendDirectoryFetch();
+            });
+        }
+
+        if (nameSearchBtn && idSearchBtn) {
+            nameSearchBtn.addEventListener('click', function () {
+                friendSearchMode = 'name';
+                nameSearchBtn.classList.add('active');
+                idSearchBtn.classList.remove('active');
+                requestFriendDirectoryFromDatabase();
+            });
+
+            idSearchBtn.addEventListener('click', function () {
+                friendSearchMode = 'id';
+                idSearchBtn.classList.add('active');
+                nameSearchBtn.classList.remove('active');
+                requestFriendDirectoryFromDatabase();
+            });
+        }
+
+        if (addFriendsTab && nearbyTab) {
+            addFriendsTab.addEventListener('click', function () {
+                addFriendsTab.classList.add('active');
+                nearbyTab.classList.remove('active');
+                friendSearchResult.textContent = '';
+                requestFriendDirectoryFromDatabase();
+            });
+
+            nearbyTab.addEventListener('click', function () {
+                nearbyTab.classList.add('active');
+                addFriendsTab.classList.remove('active');
+                friendSearchResult.textContent = 'Nearby list is same as database users for now.';
+                requestFriendDirectoryFromDatabase();
+            });
+        }
+
+        if (friendList) {
+            friendList.addEventListener('click', function (event) {
+                const target = event.target;
+                if (!(target instanceof HTMLElement)) return;
+                if (!target.classList.contains('friend-add-btn')) return;
+                const targetName = target.getAttribute('data-player-name') || '';
+                sendFriendRequest(targetName);
+            });
+        }
+
+        if (mailBtn && mailDropdown) {
+            mailBtn.addEventListener('click', function (event) {
+                event.stopPropagation();
+                renderMailBox();
+                mailDropdown.classList.toggle('show');
+                if (addFriendDropdown) addFriendDropdown.classList.remove('show');
+                if (settingsDropdown) settingsDropdown.classList.remove('show');
+            });
+        }
+
+        if (mailSideItems.length) {
+            mailSideItems.forEach(function (item) {
+                item.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                    const category = item.getAttribute('data-mail-category') || 'inbox';
+                    currentMailCategory = category;
+                    mailSideItems.forEach(function (button) { button.classList.remove('active'); });
+                    item.classList.add('active');
+                    renderMailBox();
+                });
+            });
+        }
+
+        if (mailItems) {
+            mailItems.addEventListener('click', function (event) {
+                const target = event.target;
+                if (!(target instanceof HTMLElement)) return;
+                const row = target.closest('.mail-row');
+                if (!row) return;
+                const mailId = row.getAttribute('data-mail-id') || '';
+                const source = row.getAttribute('data-mail-source') || 'mailbox';
+                selectedMailKey = source + '|' + mailId;
+                markMailItemAsRead(mailId, source);
+                renderMailBox();
+            });
+        }
+
+        if (mailAcceptBtn) {
+            mailAcceptBtn.addEventListener('click', function (event) {
+                event.stopPropagation();
+                if (!selectedMailKey) return;
+                const parts = selectedMailKey.split('|');
+                if (parts.length !== 2 || parts[0] !== 'friend-request') return;
+                const mailId = parts[1];
+                const request = removeFriendRequestById(mailId);
+                if (!request) return;
+                addFriendBidirectional(request.to, request.from);
+                selectedMailKey = '';
+                renderMailBox();
+                renderFriendsSidebar();
+                renderFriendDirectory();
+            });
+        }
+
+        if (mailDeclineBtn) {
+            mailDeclineBtn.addEventListener('click', function (event) {
+                event.stopPropagation();
+                if (!selectedMailKey) return;
+                const parts = selectedMailKey.split('|');
+                if (parts.length !== 2 || parts[0] !== 'friend-request') return;
+                const mailId = parts[1];
+                removeFriendRequestById(mailId);
+                selectedMailKey = '';
+                renderMailBox();
+                renderFriendDirectory();
+            });
+        }
+
+        if (mailMarkReadBtn) {
+            mailMarkReadBtn.addEventListener('click', function (event) {
+                event.stopPropagation();
+                markMailsReadByCurrentCategory();
+                renderMailBox();
+            });
+        }
+
+        if (mailDeleteAllBtn) {
+            mailDeleteAllBtn.addEventListener('click', function (event) {
+                event.stopPropagation();
+                deleteMailsByCurrentCategory();
+                renderMailBox();
+                renderFriendDirectory();
+            });
+        }
+
+        if (mailClaimAllBtn) {
+            mailClaimAllBtn.addEventListener('click', function (event) {
+                event.stopPropagation();
+                claimMailsByCurrentCategory();
+                markMailsReadByCurrentCategory();
+                renderMailBox();
+            });
+        }
+
+        if (settingsBtn && settingsDropdown && logoutBtn) {
+            settingsBtn.addEventListener('click', function (event) {
+                event.stopPropagation();
+                settingsDropdown.classList.toggle('show');
+                if (addFriendDropdown) addFriendDropdown.classList.remove('show');
+                if (mailDropdown) mailDropdown.classList.remove('show');
+            });
+
+            document.addEventListener('click', function (event) {
+                if (!settingsDropdown.contains(event.target) && !settingsBtn.contains(event.target)) {
+                    settingsDropdown.classList.remove('show');
+                }
+                if (addFriendDropdown && !addFriendDropdown.contains(event.target) && !addFriendBtn.contains(event.target)) {
+                    addFriendDropdown.classList.remove('show');
+                }
+                if (mailDropdown && !mailDropdown.contains(event.target) && !mailBtn.contains(event.target)) {
+                    mailDropdown.classList.remove('show');
+                }
+            });
+
+            logoutBtn.addEventListener('click', function () {
+                window.location.href = 'http://localhost/System/Login/login.php';
+            });
+        }
+
+        renderGameMode('right');
+        renderMailBox();
+        renderFriendDirectory();
+        renderFriendsSidebar();
+        requestFriendDirectoryFromDatabase();
+
+        fetch('http://localhost/System/Login/session_user.php', { credentials: 'include' })
+            .then(function (response) {
+                if (!response.ok) {
+                    throw new Error('Not logged in');
+                }
+                return response.json();
+            })
+            .then(function (data) {
+                if (!data || !data.ok || !data.username) {
+                    return;
+                }
+                if (playerNameEl) {
+                    playerNameEl.textContent = data.username;
+                }
+                if (playerAvatarEl) {
+                    playerAvatarEl.textContent = data.username.charAt(0).toUpperCase();
+                }
+                currentUsername = data.username;
+                renderMailBox();
+                renderFriendDirectory();
+                renderFriendsSidebar();
+                requestFriendDirectoryFromDatabase();
+            })
+            .catch(function () {
+                if (playerNameEl) {
+                    playerNameEl.textContent = 'Guest';
+                }
+                currentUsername = 'Guest';
+                renderMailBox();
+                renderFriendDirectory();
+                renderFriendsSidebar();
+                requestFriendDirectoryFromDatabase();
+            });
+
+        function setProgressView(progress) {
+            if (!progress) return;
+            if (playerLevelEl) playerLevelEl.textContent = String(progress.level ?? 0);
+            if (coinsValueEl) coinsValueEl.textContent = String(progress.coins ?? 0);
+            if (gemsValueEl) gemsValueEl.textContent = String(progress.gems ?? 0);
+            if (starsValueEl) starsValueEl.textContent = String(progress.stars ?? 0);
+        }
+
+        fetch('http://localhost/System/Login/progress_api.php?action=get', { credentials: 'include' })
+            .then(function (response) {
+                if (!response.ok) {
+                    throw new Error('No progress');
+                }
+                return response.json();
+            })
+            .then(function (data) {
+                if (data && data.ok && data.progress) {
+                    setProgressView(data.progress);
+                }
+            })
+            .catch(function () {
+                setProgressView({ level: 0, coins: 0, gems: 0, stars: 0 });
+            });
+    </script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System 1v1 Online</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app">
+    <section class="panel">
+      <h1>1v1 Online Arena</h1>
+      <p class="muted">Move with WASD or arrow keys. Press Space to attack.</p>
+
+      <div class="row">
+        <input id="nameInput" type="text" maxlength="24" placeholder="Enter nickname">
+        <button id="saveNameBtn">Save Name</button>
+      </div>
+
+      <div class="row">
+        <button id="findBtn" class="primary">Find 1v1 Match</button>
+        <button id="cancelBtn">Cancel</button>
+        <button id="backBtn">Back Home</button>
+      </div>
+
+      <p id="status" class="status">Disconnected...</p>
+
+      <div class="hud">
+        <div>
+          <strong>You:</strong> <span id="youName">-</span>
+          <div class="hp"><div id="youHp"></div></div>
+        </div>
+        <div>
+          <strong>Enemy:</strong> <span id="enemyName">-</span>
+          <div class="hp"><div id="enemyHp"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="arena-wrap">
+      <canvas id="arena" width="700" height="380"></canvas>
+    </section>
+  </main>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="client.js"></script>
+</body>
+</html>

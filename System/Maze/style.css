@@ -1,0 +1,87 @@
+#container { 
+    position: relative; 
+    border: 4px solid #444; 
+    width: 800px; 
+    height: 600px;
+    background: url('wall.jpg') center center;
+    background-size: cover;
+}
+
+canvas { 
+    display: block; 
+   
+    background: transparent; 
+    cursor: crosshair; 
+}
+
+#pause-btn {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 120;
+    width: 44px;
+    height: 44px;
+    border: 1px solid #a33;
+    background: rgba(20, 0, 0, 0.8);
+    color: #fff;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+#pause-menu {
+    position: absolute;
+    inset: 0;
+    z-index: 130;
+    background: rgba(0, 0, 0, 0.72);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#pause-panel {
+    width: 320px;
+    border: 2px solid #a33;
+    background: #110404;
+    padding: 18px;
+    color: #eee;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
+}
+
+#pause-panel h3 {
+    margin: 0 0 12px;
+    color: #ff5e5e;
+    text-align: center;
+}
+
+.menu-btn {
+    display: block;
+    width: 100%;
+    margin: 8px 0;
+    padding: 10px;
+    border: 1px solid #a33;
+    background: #2a0909;
+    color: #fff;
+    cursor: pointer;
+}
+
+#settings-panel {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #5e1d1d;
+}
+
+#settings-panel label {
+    display: block;
+    margin: 8px 0 4px;
+    font-size: 13px;
+    color: #f0b3b3;
+}
+
+#settings-panel input[type="range"] {
+    width: 100%;
+}
+
+.hidden {
+    display: none !important;
+}

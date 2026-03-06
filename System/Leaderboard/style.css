@@ -1,0 +1,291 @@
+/* style.css */
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
+}
+
+body {
+    background: linear-gradient(135deg, #0a2e4a 0%, #1a4d7a 50%, #0d3a5c 100%);
+    color: #fff;
+    position: relative;
+}
+
+.main-container {
+    height: 100vh;
+    width: 100vw;
+    background:
+        radial-gradient(circle at top right, rgba(0, 212, 255, 0.18), transparent 24%),
+        radial-gradient(circle at bottom left, rgba(82, 190, 255, 0.12), transparent 28%),
+        linear-gradient(135deg, rgba(10, 30, 60, 0.92) 0%, rgba(26, 77, 122, 0.82) 50%, rgba(13, 58, 92, 0.92) 100%);
+    display: flex;
+    flex-direction: column;
+    padding: 30px 50px;
+    box-sizing: border-box;
+    position: relative;
+    z-index: 1;
+    backdrop-filter: blur(10px);
+}
+
+.bubble-layer {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.bubble {
+    position: absolute;
+    bottom: -140px;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.14) 32%, rgba(0, 212, 255, 0.1) 68%, rgba(0, 90, 140, 0.04) 100%);
+    border: 1px solid rgba(170, 232, 255, 0.32);
+    box-shadow:
+        inset 0 0 18px rgba(255, 255, 255, 0.2),
+        0 0 24px rgba(0, 180, 255, 0.1);
+    opacity: 0.6;
+    animation: floatUp linear infinite;
+    transition: transform 0.25s ease, opacity 0.25s ease;
+    pointer-events: auto;
+}
+
+.bubble:hover {
+    transform: scale(1.18);
+    opacity: 0.9;
+}
+
+.bubble-1 { left: 6%; width: 70px; height: 70px; animation-duration: 14s; animation-delay: -2s; }
+.bubble-2 { left: 18%; width: 24px; height: 24px; animation-duration: 10s; animation-delay: -6s; }
+.bubble-3 { left: 31%; width: 48px; height: 48px; animation-duration: 16s; animation-delay: -4s; }
+.bubble-4 { left: 49%; width: 90px; height: 90px; animation-duration: 18s; animation-delay: -10s; }
+.bubble-5 { left: 63%; width: 36px; height: 36px; animation-duration: 12s; animation-delay: -7s; }
+.bubble-6 { left: 74%; width: 62px; height: 62px; animation-duration: 15s; animation-delay: -5s; }
+.bubble-7 { left: 86%; width: 28px; height: 28px; animation-duration: 11s; animation-delay: -8s; }
+.bubble-8 { left: 93%; width: 54px; height: 54px; animation-duration: 17s; animation-delay: -1s; }
+
+@keyframes floatUp {
+    0% {
+        transform: translate3d(0, 0, 0) scale(0.9);
+    }
+    25% {
+        transform: translate3d(16px, -24vh, 0) scale(1);
+    }
+    50% {
+        transform: translate3d(-12px, -50vh, 0) scale(1.05);
+    }
+    75% {
+        transform: translate3d(18px, -76vh, 0) scale(0.96);
+    }
+    100% {
+        transform: translate3d(-8px, -118vh, 0) scale(1.08);
+    }
+}
+
+.game-top-nav {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.game-top-nav-btn {
+    padding: 10px 18px;
+    border: 1px solid #00d4ff;
+    border-radius: 8px;
+    background: rgba(0, 170, 200, 0.3);
+    color: #dff7ff;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(8px);
+}
+
+.game-top-nav-btn:hover {
+    background: #00d4ff;
+    color: #0a2e4a;
+}
+
+.header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.search-box {
+    border: 1px solid #00aac8;
+    padding: 8px 16px;
+    background: rgba(10, 30, 60, 0.9);
+    border-radius: 10px;
+    box-shadow: 0 14px 30px rgba(3, 15, 35, 0.18);
+}
+
+.search-box label {
+    display: block;
+    color: #8fe7ff;
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 2px;
+}
+
+.search-box input {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 16px;
+    outline: none;
+    width: 300px;
+}
+
+.exit-btn {
+    background: rgba(0, 170, 200, 0.3);
+    color: #ffffff;
+    border: 1px solid #00d4ff;
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.exit-btn:hover {
+    background: #00d4ff;
+    color: #0a2e4a;
+}
+
+.table-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 15px;
+}
+
+th {
+    background: rgba(10, 30, 60, 0.9);
+    border-top: 1px solid rgba(143, 231, 255, 0.25);
+    border-bottom: 1px solid rgba(143, 231, 255, 0.25);
+    color: white;
+    padding: 15px;
+    position: sticky;
+    top: 0;
+}
+
+td {
+    background: rgba(11, 28, 53, 0.8);
+    border-top: 1px solid rgba(143, 231, 255, 0.12);
+    border-bottom: 1px solid rgba(143, 231, 255, 0.12);
+    color: white;
+    text-align: center;
+    padding: 20px;
+    font-weight: bold;
+    transition: 0.2s;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+}
+
+tr:hover td {
+    background: rgba(0, 212, 255, 0.88);
+    color: #07253a;
+}
+
+.sliding-card {
+    position: absolute;
+    right: -400px; /* Hidden by default */
+    top: 140px;
+    width: 380px;
+    height: 480px;
+    background: linear-gradient(180deg, rgba(10, 30, 60, 0.98) 0%, rgba(13, 58, 92, 0.98) 100%);
+    border: 2px solid #00d4ff;
+    border-radius: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+    color: white;
+    transition: right 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    padding: 40px 0;
+    z-index: 10;
+}
+
+.sliding-card.open {
+    right: 60px; /* Slide into view */
+}
+
+.close-card-btn {
+    padding: 10px 30px;
+    background: transparent;
+    border: 2px solid white;
+    color: white;
+    cursor: pointer;
+    border-radius: 999px;
+}
+
+.close-card-btn:hover {
+    background: #00d4ff;
+    color: #0a2e4a;
+    border-color: #00d4ff;
+}
+
+@media (max-width: 900px) {
+    .main-container {
+        padding: 20px;
+    }
+
+    .header-row {
+        gap: 14px;
+        align-items: stretch;
+    }
+
+    .search-box {
+        flex: 1;
+    }
+
+    .search-box input {
+        width: 100%;
+    }
+
+    .sliding-card {
+        width: min(360px, calc(100vw - 40px));
+        right: -120%;
+        top: 110px;
+    }
+
+    .sliding-card.open {
+        right: 20px;
+    }
+}
+
+@media (max-width: 640px) {
+    .main-container {
+        padding: 16px;
+    }
+
+    .game-top-nav {
+        flex-wrap: wrap;
+    }
+
+    .header-row {
+        flex-direction: column;
+    }
+
+    .exit-btn {
+        align-self: flex-end;
+    }
+
+    th,
+    td {
+        padding: 14px 10px;
+        font-size: 13px;
+    }
+}

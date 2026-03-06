@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Runner Pro</title>
+    <link rel="stylesheet" href="platform.css">
+</head>
+<body>
+    <div id="game-container">
+        <div id="hud">
+            <button id="homeBtn">Home</button>
+            <div id="stats">
+                <span>LEVEL: <span id="levelVal">1</span></span>
+                <span>HEALTH: <span id="healthVal">3</span></span>
+                <span>POINTS: <span id="pointsVal">0</span></span>
+                <span>TIME: <span id="timerVal">60</span>s</span>
+            </div>
+            <div id="restartHint">PRESS 'R' TO RESTART</div>
+        </div>
+
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="gameOver" class="hidden">
+            <h1>GAME OVER! PRESS R</h1>
+        </div>
+    </div>
+    <script src="platform.js"></script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2D Educational Decision Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>2D Educational Decision Game</h1>
+        <div class="button-group" id="startScreen">
+            <button id="startGameBtn" class="btn btn-primary">Start Game</button>
+            <button id="viewLeaderboardBtn" class="btn btn-secondary">View Leaderboard</button>
+        </div>
+        
+        <div id="leaderboardModal" class="modal hidden">
+            <div class="modal-content">
+                <h2>Leaderboard</h2>
+                <div id="leaderboardTable"></div>
+                <button class="btn btn-primary" onclick="closeLeaderboard()">Back to Menu</button>
+            </div>
+        </div>
+
+        <canvas id="gameCanvas" width="1370" height="768" class="hidden"></canvas>
+
+        <div id="gameInfo" class="hidden">
+            <button id="homeBtn" class="btn btn-secondary">Home</button>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
